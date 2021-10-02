@@ -1,4 +1,4 @@
-cd("C:/Users/marek/OneDrive/Documents/Julia_files")
+#cd("C:/Users/marek/OneDrive/Documents/Julia_files")
 
 include("functions_discrete_choice_housing.jl")
 include("utils.jl")
