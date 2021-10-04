@@ -1,0 +1,18 @@
+ * Status: success
+
+ * Candidate solution
+    Final objective value:     1.420861e-02
+
+ * Found with
+    Algorithm:     Nelder-Mead
+
+ * Convergence measures
+    √(Σ(yᵢ-ȳ)²)/n ≤ 1.0e-08
+
+ * Work counters
+    Seconds run:   0  (vs limit Inf)
+    Iterations:    4015
+    f(x) calls:    5494
+ED_vec_max = 0.12651256299947847
+EA_vec_max = 0.0009331305002522328
+Min wage < max rental price
