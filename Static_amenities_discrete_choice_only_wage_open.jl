@@ -13,7 +13,7 @@ Random.seed!(1234);
 # Number of groups, number of amenities, number of locations
 K = 2;
 S = 2;
-J = 10;
+J = 5;
 
 # Helper params
 dim_l_a  = J+1;
