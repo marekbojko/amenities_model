@@ -1,4 +1,4 @@
-#cd("C:/Users/marek/OneDrive/Documents/Julia_files")
+cd("C:/Users/marek/OneDrive/Documents/Julia_files")
 
 include("functions_discrete_choice_housing.jl")
 include("utils.jl")
@@ -51,7 +51,7 @@ P = merge(P, Delta_param);
 c_a_j  = 1*ones(P.J)+0.5*rand(P.J); # what's the difference between c_a_j and c_s_j?
 # should this be kappa?
 c_s    = sigma_s; # σ_s???
-w      = [8,6]; # wages???
+w      = [4,3]; # wages???
 lambda = 1;
 
 Amenity_param = (c_a_j  = c_a_j,
@@ -75,7 +75,7 @@ Supply_param = (alpha = alpha,
 P = merge(P,Supply_param);
 
 # Houses
-H = vcat(fill.(0.8*sum(P.Pop)/P.J, P.J)...); # Why is this 0.8?
+H = vcat(fill.(sum(P.Pop)/P.J, P.J)...); # Why is this 0.8?
 
 x = reshape([r a],P.J*(P.S+1));
 
@@ -115,16 +115,19 @@ df[!,"EA_vec_max"] = Float64[]
 df[!,"satisfies_constraints"] = Int64[]
 
 # Loop over initial conditions
-for i in 1:20
+for i in 1:16
 
     println(i)
 
     initial_x = log.([i/4*ones(P.J); i*ones(P.J*P.S)])
 
-    #results_NM = optimize(res,initial_x,iterations = 10^9, g_tol = 1e-12)
-    #@show results_NM
+    # Perform the minimization task
+    # Perform the minimization task - first use Nelder Mead for 5*10^3 iters and then switch to LBFGS
+    results_NM = optimize(res, initial_x, iterations = 10^3, x_tol = 1e-32, f_tol = 1e-32, g_tol = 1e-16)
+    x_min_NM = results_NM.minimizer
 
-    results = optimize(res,initial_x,method = LBFGS(); autodiff = :forward, iterations = 5*10^6)
+    results = optimize(res,x_min_NM, method = LBFGS(); autodiff = :forward,
+        x_tol = 1e-32, f_tol = 1e-32, g_tol = 1e-32, iterations = 5*10^6)
     @show results
     io = open("optim_output/"*string(i/2)*"_"*string(J)*"_"*string(K)*"_"*string(S)*"_LBFGS_discrete_only_wage_open.txt", "w")
     write(io, string(results))
@@ -138,11 +141,11 @@ for i in 1:20
     write(io,"EA_vec_max = $EA_vec_max\n")
 
     # If not converged properly, plug it into a Nelder-Mead optimizer
-    if max(ED_vec_max,EA_vec_max) > 0.05
-        results = optimize(res,xmin,method = NelderMead(); autodiff = :forward, iterations = 5*10^4)
+    if max(ED_vec_max,EA_vec_max) > 0.01
+        results = optimize(res,xmin,method = NelderMead(), iterations = 5*10^4, x_tol = 1e-32, f_tol = 1e-32, g_tol = 1e-32)
 
         @show results
-        io = open("optim_output/"*string(i/2)*"_"*string(J)*"_"*string(K)*"_"*string(S)*"_LBFGS_NM_discrete_only_wage_open.txt", "w")
+        io = open("optim_output/"*string(i)*"_"*string(1)*"_"*string(J)*"_"*string(K)*"_"*string(S)*"_LBFGS_NM_discrete_only_wage_open.txt", "w")
         write(io, string(results))
 
         @show xmin = results.minimizer
@@ -167,6 +170,177 @@ for i in 1:20
     push!(df, true_minimizer)
 end
 
+for i in 1:16
+
+    println(i)
+
+    initial_x = log.([i/4*ones(P.J); 3*i*ones(P.J*P.S)])
+
+    # Perform the minimization task
+    # Perform the minimization task - first use Nelder Mead for 5*10^3 iters and then switch to LBFGS
+    results_NM = optimize(res, initial_x, iterations = 10^3, x_tol = 1e-32, f_tol = 1e-32, g_tol = 1e-16)
+    x_min_NM = results_NM.minimizer
+
+    results = optimize(res,x_min_NM, method = LBFGS(); autodiff = :forward,
+        x_tol = 1e-32, f_tol = 1e-32, g_tol = 1e-32, iterations = 5*10^6)
+    @show results
+    io = open("optim_output/"*string(i/2)*"_"*string(J)*"_"*string(K)*"_"*string(S)*"_LBFGS_discrete_only_wage_open.txt", "w")
+    write(io, string(results))
+
+    @show xmin = results.minimizer
+    @show true_minimizer = exp.(xmin)
+    @show ED_vec_max = maximum(abs.(Static_ED_vec(true_minimizer,P)))
+    @show EA_vec_max = maximum(abs.(Static_EA(true_minimizer,P)))
+
+    write(io,"ED_vec_max = $ED_vec_max\n")
+    write(io,"EA_vec_max = $EA_vec_max\n")
+
+    # If not converged properly, plug it into a Nelder-Mead optimizer
+    if max(ED_vec_max,EA_vec_max) > 0.01
+        results = optimize(res,xmin,method = NelderMead(), iterations = 5*10^4, x_tol = 1e-32, f_tol = 1e-32, g_tol = 1e-32)
+
+        @show results
+        io = open("optim_output/"*string(i)*"_"*string(6)*string(J)*"_"*string(K)*"_"*string(S)*"_LBFGS_NM_discrete_only_wage_open.txt", "w")
+        write(io, string(results))
+
+        @show xmin = results.minimizer
+        @show true_minimizer = exp.(xmin)
+        @show ED_vec_max = maximum(abs.(Static_ED_vec(true_minimizer,P)))
+        @show EA_vec_max = maximum(abs.(Static_EA(true_minimizer,P)))
+
+        write(io,"ED_vec_max = $ED_vec_max\n")
+        write(io,"EA_vec_max = $EA_vec_max\n")
+    end
+
+    # Check if min of wages is higher than the max of rental prices
+    if minimum(P.w) < maximum(true_minimizer[1:J])
+        write(io,"Min wage < max rental price\n")
+        append!(true_minimizer,ED_vec_max,EA_vec_max,0)
+    else
+        write(io,"Min wage >= max rental price\n")
+        append!(true_minimizer,ED_vec_max,EA_vec_max,1)
+    end
+    close(io)
+
+    push!(df, true_minimizer)
+end
+
+for i in 1:16
+
+    println(i)
+
+    initial_x = log.([i/4*ones(P.J); 6*i*ones(P.J*P.S)])
+
+    # Perform the minimization task
+    # Perform the minimization task - first use Nelder Mead for 5*10^3 iters and then switch to LBFGS
+    results_NM = optimize(res, initial_x, iterations = 10^3, x_tol = 1e-32, f_tol = 1e-32, g_tol = 1e-16)
+    x_min_NM = results_NM.minimizer
+
+    results = optimize(res,x_min_NM, method = LBFGS(); autodiff = :forward,
+        x_tol = 1e-32, f_tol = 1e-32, g_tol = 1e-32, iterations = 5*10^6)
+    @show results
+    io = open("optim_output/"*string(i)*string(6)*"_"*string(J)*"_"*string(K)*"_"*string(S)*"_LBFGS_discrete_only_wage_open.txt", "w")
+    write(io, string(results))
+
+    @show xmin = results.minimizer
+    @show true_minimizer = exp.(xmin)
+    @show ED_vec_max = maximum(abs.(Static_ED_vec(true_minimizer,P)))
+    @show EA_vec_max = maximum(abs.(Static_EA(true_minimizer,P)))
+
+    write(io,"ED_vec_max = $ED_vec_max\n")
+    write(io,"EA_vec_max = $EA_vec_max\n")
+
+    # If not converged properly, plug it into a Nelder-Mead optimizer
+    if max(ED_vec_max,EA_vec_max) > 0.01
+        results = optimize(res,xmin,method = NelderMead(), iterations = 5*10^4, x_tol = 1e-32, f_tol = 1e-32, g_tol = 1e-32)
+
+        @show results
+        io = open("optim_output/"*string(i)*"_"*string(6)*"_"*string(J)*"_"*string(K)*"_"*string(S)*"_LBFGS_NM_discrete_only_wage_open.txt", "w")
+        write(io, string(results))
+
+        @show xmin = results.minimizer
+        @show true_minimizer = exp.(xmin)
+        @show ED_vec_max = maximum(abs.(Static_ED_vec(true_minimizer,P)))
+        @show EA_vec_max = maximum(abs.(Static_EA(true_minimizer,P)))
+
+        write(io,"ED_vec_max = $ED_vec_max\n")
+        write(io,"EA_vec_max = $EA_vec_max\n")
+    end
+
+    # Check if min of wages is higher than the max of rental prices
+    if minimum(P.w) < maximum(true_minimizer[1:J])
+        write(io,"Min wage < max rental price\n")
+        append!(true_minimizer,ED_vec_max,EA_vec_max,0)
+    else
+        write(io,"Min wage >= max rental price\n")
+        append!(true_minimizer,ED_vec_max,EA_vec_max,1)
+    end
+    close(io)
+
+    push!(df, true_minimizer)
+end
+
+for n_mult in 1:64
+    for n_denom in 1:32
+        for i in 1:16
+
+            println(i)
+
+            initial_x = log.([i/n_denom*ones(P.J); n_mult/n_denom*i*ones(P.J*P.S)])
+
+            # Perform the minimization task
+            # Perform the minimization task - first use Nelder Mead for 5*10^3 iters and then switch to LBFGS
+            results_NM = optimize(res, initial_x, iterations = 10^3)
+            x_min_NM = results_NM.minimizer
+
+            results = optimize(res,x_min_NM, method = LBFGS(); autodiff = :forward,
+                x_tol = 1e-32, f_tol = 1e-32, g_tol = 1e-16, iterations = 5*10^6)
+            @show results
+            io = open("optim_output/"*string(i)*"_"*string(n_denom)*"_"*
+                    string(n_mult)*"_"*string(J)*"_"*string(K)*"_"*string(S)*"_LBFGS_discrete_only_wage_open.txt", "w")
+            write(io, string(results))
+
+            @show xmin = results.minimizer
+            @show true_minimizer = exp.(xmin)
+            @show ED_vec_max = maximum(abs.(Static_ED_vec(true_minimizer,P)))
+            @show EA_vec_max = maximum(abs.(Static_EA(true_minimizer,P)))
+
+            write(io,"ED_vec_max = $ED_vec_max\n")
+            write(io,"EA_vec_max = $EA_vec_max\n")
+
+            # If not converged properly, plug it into a Nelder-Mead optimizer
+            if max(ED_vec_max,EA_vec_max) > 0.01
+                results = optimize(res,xmin,method = NelderMead(), iterations = 5*10^4)
+
+                @show results
+                io = open("optim_output/"*string(i)*"_"*string(n_denom)*"_"*
+                        string(n_mult)*"_"*string(J)*"_"*string(K)*"_"*string(S)*"_LBFGS_NM_discrete_only_wage_open.txt", "w")
+                write(io, string(results))
+
+                @show xmin = results.minimizer
+                @show true_minimizer = exp.(xmin)
+                @show ED_vec_max = maximum(abs.(Static_ED_vec(true_minimizer,P)))
+                @show EA_vec_max = maximum(abs.(Static_EA(true_minimizer,P)))
+
+                write(io,"ED_vec_max = $ED_vec_max\n")
+                write(io,"EA_vec_max = $EA_vec_max\n")
+            end
+
+            # Check if min of wages is higher than the max of rental prices
+            if minimum(P.w) < maximum(true_minimizer[1:J])
+                write(io,"Min wage < max rental price\n")
+                append!(true_minimizer,ED_vec_max,EA_vec_max,0)
+            else
+                write(io,"Min wage >= max rental price\n")
+                append!(true_minimizer,ED_vec_max,EA_vec_max,1)
+            end
+            close(io)
+
+            push!(df, true_minimizer)
+        end
+    end
+end
+#=
 for i in 1:20
 
     println(i)
@@ -218,5 +392,6 @@ for i in 1:20
 
     push!(df, true_minimizer)
 end
+=#
 
-CSV.write("optim_output/"*string(J)*"_"*string(K)*"_"*string(S)*"_LBFGS_discrete_only_wage_open.csv", df)
+CSV.write("optim_output/stricter"*string(J)*"_"*string(K)*"_"*string(S)*"_LBFGS_discrete_only_wage_open.csv", df)
