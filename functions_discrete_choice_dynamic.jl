@@ -21,16 +21,16 @@ end
 
 function flow_utility_one_type(x,k,P)
     r,a = unpack_vec(x,P.J,P.J,P.S)
-    U = - MC(P) .+ P.delta_w[k] * compose_mat_for_utility(ones(P.J),x -> x,P.J+1) * log(P.w[k]) .-
-            P.delta_p[k]*compose_mat_for_utility(1 .+ P.p,log,P.J+1).+
-            compose_mat_for_utility(log.(1 .+ a)*P.delta_a[k,:],log,P.J+1) .+
-            compose_mat_for_utility(P.delta_j,x -> x, P.J+1)
+    U = compose_mat_for_utility(log.(a)*(P.delta_a[k,:] ./ P.sigma_s),x -> x,P.J+1) +
+        compose_mat_for_utility(P.delta_j,x -> x, P.J+1) - MC(P)
+            # .+ P.delta_p[k]*compose_mat_for_utility(1 .+ P.p,log,P.J+1)
     if P.w_in_util
         budget = P.w[k]*ones(P.J)-r
-        replace!(x -> x<=0 ? 10^-Inf -1 : x, budget)
-        U = U .+  P.delta_r[k]*compose_mat_for_utility(1 .+ budget,log,P.J+1)
+        replace!(x -> x<=0 ? 10^-Inf : x, budget)
+        U = U +  P.delta_r[k]*compose_mat_for_utility(budget,log,P.J+1)
     else
-        U = U .- P.delta_r[k]*compose_mat_for_utility(1 .+ r,log,P.J+1)
+        U = U .+ P.delta_w[k] * compose_mat_for_utility(ones(P.J),x -> x,P.J+1) * log(P.w[k])
+            .- P.delta_r[k]*compose_mat_for_utility(r,log,P.J+1)
     end
     return U
 end
@@ -53,15 +53,25 @@ function value_function_one_type(x,k,P)
     iter = 0
 
     # iterate
-    while dist_func > P.tol && iter <= P.max_iter
-        DEV = [mat_vals_by_row(EV_G, x -> x, P.J+1);EV_G']
-        v = flow_utility_one_type(x,k,P) + P.beta*DEV
-        EV = log.(exp.(v')*ones(P.D))
-        dist_func = norm(EV-EV_G,Inf)
-        EV_G = EV[:]
-        iter += 1
+    if P.m_0 > 0
+        while dist_func > P.tol && iter <= P.max_iter
+            DEV = [mat_vals_by_row(EV_G, x -> x, P.J+1);EV_G']
+            v = flow_utility_one_type(x,k,P) + P.beta*DEV
+            EV = log.(exp.(v')*ones(P.D))
+            dist_func = norm(EV-EV_G,Inf)
+            EV_G = EV[:]
+            iter += 1
+        end
+    elseif P.m_0 == 0
+        while dist_func > P.tol && iter <= P.max_iter
+            DEV = mat_vals_by_row(EV_G, x -> x, P.J+1)
+            v = flow_utility_one_type(x,k,P)[1:end-1,:] + P.beta*DEV
+            EV = log.(exp.(v')*ones(P.J+1))
+            dist_func = norm(EV-EV_G,Inf)
+            EV_G = EV[:]
+            iter += 1
+        end
     end
-
     return EV_G
 end
 
@@ -77,27 +87,118 @@ end
 function transition_matrix_loc_action_one_type(x,k,P)
     r,a = unpack_vec(x,P.J,P.J,P.S)
     EV_k = value_function_one_type(x,k,P)
-    DEV = [mat_vals_by_row(EV_k, x -> x, P.J+1);EV_k']
-    v = flow_utility_one_type(x,k,P) + P.beta*DEV
-    denom = exp.(v)' * ones(P.D)
-    trans_mat = exp.(v)*inv(Diagonal(denom))
+    if P.m_0 > 0
+        DEV = [mat_vals_by_row(EV_k, x -> x, P.J+1);EV_k']
+        v = flow_utility_one_type(x,k,P) + P.beta*DEV
+        denom = exp.(v)' * ones(P.D)
+        trans_mat = exp.(v)*inv(Diagonal(denom))
+        return trans_mat' #(J+1)xD matrix
+    elseif P.m_0 == 0
+        v = flow_utility_one_type(x,k,P)[1:end-1,1] + P.beta*EV_k
+        denom = exp.(v)' * ones(P.J+1)
+        prob_vec = exp.(v)/denom
+        trans_mat = mat_vals_by_row(prob_vec, x -> x, P.J+1)
+    else
+        return
+    end
     return trans_mat' #(J+1)xD matrix
 end
 
 function transition_matrix_loc_to_loc_one_type(x,k,P)
-    trans_mat_d_j = transition_matrix_loc_action_one_type(x,k,P)
-    trans_mat_own = trans_mat_d_j[:,1:P.J+1]
-    staying_put_prob_vec = trans_mat_d_j[:,end]
-    trans_mat_loc_to_loc = trans_mat_own + Diagonal(staying_put_prob_vec)
-    # there could be some rounding errors, so we need to make sure the matrix
-    # is row-stochastic
-    row_sums = trans_mat_loc_to_loc*ones(P.J+1)
-    trans_mat_loc_to_loc = trans_mat_loc_to_loc ./ row_sums
-    return trans_mat_loc_to_loc
+    if P.m_0 > 0
+        trans_mat_d_j = transition_matrix_loc_action_one_type(x,k,P)
+        trans_mat_own = trans_mat_d_j[:,1:P.J+1]
+        staying_put_prob_vec = trans_mat_d_j[:,end]
+        trans_mat_loc_to_loc = trans_mat_own + Diagonal(staying_put_prob_vec)
+        # there could be some rounding errors, so we need to make sure the matrix
+        # is row-stochastic
+        row_sums = trans_mat_loc_to_loc*ones(P.J+1)
+        trans_mat_loc_to_loc = trans_mat_loc_to_loc ./ row_sums
+        return trans_mat_loc_to_loc
+    elseif P.m_0 == 0
+        return transition_matrix_loc_action_one_type(x,k,P)
+    else
+        return
+    end
+end
+
+function trans_mat_loc_loc_one_type_noinf(x,k,P)
+    r,a = unpack_vec(x,P.J,P.J,P.S)
+
+    ### Compute flow utility for x
+    flow_U = compose_mat_for_utility(log.(a)*(P.delta_a[k,:] ./ P.sigma_s),x -> x,P.J+1) +
+        compose_mat_for_utility(P.delta_j,x -> x, P.J+1) - MC(P)
+            # .+ P.delta_p[k]*compose_mat_for_utility(1 .+ P.p,log,P.J+1)
+    if P.w_in_util
+        budget = P.w[k]*ones(P.J)-r
+        z = replace(x -> x<=0 ? 1 : 0, budget)
+        replace!(x -> x<=0 ? 10^(-128) : x, budget)
+        flow_U = flow_U +  P.delta_r[k]*compose_mat_for_utility(budget,log,P.J+1)
+    else
+        flow_U = flow_U .+ P.delta_w[k] * compose_mat_for_utility(ones(P.J),x -> x,P.J+1) * log(P.w[k])
+            .- P.delta_r[k]*compose_mat_for_utility(r,log,P.J+1)
+    end
+
+    # initial guess
+    EV_G = [rand(P.J);0]
+    dist_func = 1
+    iter = 0
+
+    if P.m_0 > 0
+
+        ### Compute the value function
+        # iterate
+        while dist_func > P.tol && iter <= P.max_iter
+            DEV = [mat_vals_by_row(EV_G, x -> x, P.J+1);EV_G']
+            v = flow_U + P.beta*DEV
+            EV = log.(exp.(v')*ones(P.D))
+            dist_func = norm(EV-EV_G,Inf)
+            EV_G = EV[:]
+            iter += 1
+        end
+
+        ### Compute action-loc transition matrix
+        DEV = [mat_vals_by_row(EV_G, x -> x, P.J+1);EV_G']
+        v = flow_U + P.beta*DEV
+        denom = (exp.(v) .* (1 .- compose_mat_for_utility(z, x -> x, P.J+1)))' * ones(P.D)
+        trans_mat = (exp.(v) .* (1 .- compose_mat_for_utility(z, x -> x, P.J+1)))*inv(Diagonal(denom))
+        trans_mat_d_j = trans_mat'
+        trans_mat_own = trans_mat_d_j[:,1:P.J+1]
+        staying_put_prob_vec = trans_mat_d_j[:,end]
+        trans_mat_loc_to_loc = trans_mat_own + Diagonal(staying_put_prob_vec)
+
+        # there could be some rounding errors, so we need to make sure the matrix
+        # is row-stochastic
+        row_sums = trans_mat_loc_to_loc*ones(P.J+1)
+        trans_mat_loc_to_loc = trans_mat_loc_to_loc ./ row_sums
+        return trans_mat_loc_to_loc
+
+    elseif P.m_0 == 0
+
+        ### Compute the value function
+        # iterate
+        while dist_func > P.tol && iter <= P.max_iter
+            DEV = mat_vals_by_row(EV_G, x -> x, P.J+1)
+            v = flow_U[1:end-1,:] + P.beta*DEV
+            EV = log.(exp.(v')*ones(P.J+1))
+            dist_func = norm(EV-EV_G,Inf)
+            EV_G = EV[:]
+            iter += 1
+        end
+
+        v = flow_U[1:P.J+1,1] + P.beta*EV_G
+        z = [z; 0]
+        denom = (exp.(v) .* (1 .- z))' * ones(P.J+1)
+        prob_vec = (exp.(v) .* (1 .- z))/denom
+        trans_mat = mat_vals_by_row(prob_vec, x -> x, P.J+1)
+        return trans_mat'
+    else
+        return
+    end
 end
 
 function stationary_dist_one_type(x,k,P)
-    return stationary_dist_MC_by_iter(transition_matrix_loc_to_loc_one_type(x,k,P))
+    return stationary_dist_MC_by_iter(trans_mat_loc_loc_one_type_noinf(x,k,P))
 end
 
 function stationary_dist_all_types(x,P)
@@ -118,7 +219,7 @@ end
 function ED_L(x,P)
     r,a = unpack_vec(x,P.J,P.J,P.S)
     D = D_L(x,P)[1:P.J]
-    Static_ED_vec = 0.5*(D-S_L(r,P).*P.H)./(D+S_L(r,P).*P.H)
+    Static_ED_vec = D-S_L(r,P) .* P.H
     return Static_ED_vec
 end
 
@@ -134,7 +235,7 @@ end
 
 function EA_S(x,P)
     r,a = unpack_vec(x,P.J,P.J,P.S)
-    Static_EA = 0.5*(Amenity_supply(x,P)-a)
+    Static_EA = Amenity_supply(x,P) - a
     Static_EA = reshape(Static_EA,P.J*P.S)
     return Static_EA
 end
