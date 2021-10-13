@@ -76,7 +76,7 @@ x = reshape([r a],P.J*(P.S+1))
 @show res_func(x,P)
 
 # Save parameters
-io = open("params/"*string(J)*"_"*string(K)*"_"*string(S)*"dynamic_w_wage_discrete.txt", "w")
+io = open("params/"*string(J)*"_"*string(K)*"_"*string(S)*"dynamic_w_wage_no_MC_discrete.txt", "w")
 write(io, string(P))
 close(io)
 
@@ -96,7 +96,7 @@ x_min_NM = results_NM.minimizer
 results = optimize(f_obj, x_min_NM, method = LBFGS(); autodiff = :forward, iterations = 5*10^6,
                         x_tol = 1e-32, f_tol = 1e-32, g_tol = 1e-32)
 @show results
-io = open("optim_output/"*string(J)*"_"*string(K)*"_"*string(S)*"_NM_dynamic_w_wage.txt", "w")
+io = open("optim_output/"*string(J)*"_"*string(K)*"_"*string(S)*"_NM_dynamic_w_wage_no_MC.txt", "w")
 write(io, string(results))
 
 @show xmin = results.minimizer
@@ -131,19 +131,19 @@ sorted_D_L = stationary_dist_types_eq[sortperm(get_ordered_indices(P.delta_j)),:
 plot(sorted_D_L, label = "left", legend=:topleft,right_margin = 10mm,
 xticks=([i for i in 0:P.J]), labels = ["w=$(P.w[1])" "w=$(P.w[2])"])
 plot!(twinx(),r_eq[sortperm(get_ordered_indices(P.delta_j))],color=:green,xticks=:none,label="r",right_margin = 10mm)
-savefig("optim_output/housing_demand_r_"*string(J)*"_"*string(K)*"_"*string(S)*"_NM_dynamic_w_wage.png")
+savefig("optim_output/housing_demand_r_"*string(J)*"_"*string(K)*"_"*string(S)*"_NM_dynamic_w_wage_no_MC.png")
 
 sorted_a_eq = a_eq[sortperm(get_ordered_indices(P.delta_j)),:]
 plot(sorted_a_eq, label = "left", legend=:topleft,right_margin = 10mm,
 xticks=([i for i in 0:P.J]), labels = ["s=1" "s=2"])
 plot!(twinx(),r_eq[sortperm(get_ordered_indices(P.delta_j))],color=:green,xticks=:none,label="r",right_margin = 10mm)
-savefig("optim_output/eq_amenities_r_"*string(J)*"_"*string(K)*"_"*string(S)*"_NM_dynamic_w_wage.png")
+savefig("optim_output/eq_amenities_r_"*string(J)*"_"*string(K)*"_"*string(S)*"_NM_dynamic_w_wage_no_MC.png")
 
 # Compute and plot welfare
 @show welfare_by_type = welfare_households(true_minimizer,P)
 bar(welfare_by_type, legend = false, xticks = [1,2], title = "Welfare by type")
-savefig("optim_output/welfare_"*string(J)*"_"*string(K)*"_"*string(S)*"_NM_dynamic_w_wage.png")
+savefig("optim_output/welfare_"*string(J)*"_"*string(K)*"_"*string(S)*"_NM_dynamic_w_wage_no_MC.png")
 
 @show welfare_landlords_by_loc = welfare_landlords(true_minimizer,P)
 bar(welfare_landlords_by_loc, legend = false, xticks = 1:P.J, title = "Landlord welfare by location")
-savefig("optim_output/welfare_landlords_"*string(J)*"_"*string(K)*"_"*string(S)*"_NM_dynamic_w_wage.png")
+savefig("optim_output/welfare_landlords_"*string(J)*"_"*string(K)*"_"*string(S)*"_NM_dynamic_w_wage_no_MC.png")

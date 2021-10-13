@@ -5,14 +5,14 @@ include("utils.jl")
 
 using Random, LinearAlgebra, Optim, ForwardDiff, BenchmarkTools, DataFrames
 using Optim: converged, maximum, maximizer, minimizer, iterations
-using CSV, Plots, Plots.PlotMeasures
+using CSV, Plots, LineSearches, Plots.PlotMeasures
 
 Random.seed!(1234)
 
 # Number of groups, number of amenities, number of locations
 K = 2
 S = 2
-J = 5
+J = 3
 
 # Population
 Pop = 30*J*[1/2, 1/2]
@@ -31,7 +31,7 @@ Util_param = (delta_w = normalize(ones(P.K),1),
                 delta_r = normalize(ones(P.K),1),
                 delta_a = [0.8 0.2; 0.2 0.8],
                 delta_j = normalize([i for i in 1:P.J],1),
-                beta = 0.95,
+                beta = 0,
                 w_in_util = true)
 P = merge(P, Util_param)
 
