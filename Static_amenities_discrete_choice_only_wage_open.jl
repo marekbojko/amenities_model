@@ -1,4 +1,8 @@
+<<<<<<< HEAD
+cd("/home/mbojko/amenities_model")
+=======
 cd("C:/Users/marek/OneDrive/Documents/Julia_files")
+>>>>>>> 9b27286fee79614136e5c38b19b42dc4a5c4f5e6
 
 include("functions_discrete_choice_housing.jl")
 include("utils.jl")
