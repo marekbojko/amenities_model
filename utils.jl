@@ -89,11 +89,7 @@ function stationary_dist_MC(M::AbstractMatrix{Float64})
 
 Computes the stationary distribution of a Markov Chain given its transition matrix
 """
-<<<<<<< HEAD
 function stationary_dist_MC(M)
-=======
-function stationary_dist_MC(M::AbstractMatrix{Float64})
->>>>>>> 165923626c5fc839d6fe13eb9ef5ef55720d2afe
     # Compute eigenvalues and eigenvectors
     eigen_vals, eigen_vecs = eigen(M')
 
