@@ -1,6 +1,7 @@
 #cd("C:/Users/marek/OneDrive/Documents/Julia_files")
 
 cd("/home/mbojko/amenities_model")
+cd("C:/Users/marek/OneDrive/Documents/Booth/git/amenities_model")
 
 include("functions_discrete_choice_dynamic.jl")
 include("utils.jl")
@@ -14,7 +15,7 @@ Random.seed!(1234)
 # Number of groups, number of amenities, number of locations
 K = 2
 S = 2
-J = 20
+J = 10
 
 # Population
 Pop = 30*J*[1/2, 1/2]

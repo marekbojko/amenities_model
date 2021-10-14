@@ -2,7 +2,6 @@
 
 cd("/home/mbojko/amenities_model")
 
-
 include("functions_discrete_choice_dynamic.jl")
 include("utils.jl")
 
@@ -119,7 +118,6 @@ close(io)
 
 #### Analysis of results
 
-#=
 r_eq = true_minimizer[1:P.J]
 a_eq = reshape(true_minimizer[P.J+1:end],P.J,P.S)
 stationary_dist_types_eq = [stationary_dist_one_type(true_minimizer,k,P) for k in 1:P.K]
@@ -152,4 +150,3 @@ savefig("optim_output/welfare_"*string(J)*"_"*string(K)*"_"*string(S)*"_NM_dynam
 @show welfare_landlords_by_loc = welfare_landlords(true_minimizer,P)
 bar(welfare_landlords_by_loc, legend = false, xticks = 1:P.J, title = "Landlord welfare by location")
 savefig("optim_output/welfare_landlords_"*string(J)*"_"*string(K)*"_"*string(S)*"_NM_dynamic_w_wage.png")
-=#
