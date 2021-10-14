@@ -27,12 +27,12 @@ function flow_utility_one_type(x,k,P)
     if P.w_in_util
         budget = P.w[k]*ones(P.J)-r
         replace!(x -> x<=0 ? 10^-Inf : x, budget)
-        U = U +  P.delta_r[k]*compose_mat_for_utility(budget,log,P.J+1)
+        U_ret = U +  P.delta_r[k]*compose_mat_for_utility(budget,log,P.J+1)
     else
-        U = U .+ P.delta_w[k] * compose_mat_for_utility(ones(P.J),x -> x,P.J+1) * log(P.w[k])
+        U_ret = U .+ P.delta_w[k] * compose_mat_for_utility(ones(P.J),x -> x,P.J+1) * log(P.w[k])
             .- P.delta_r[k]*compose_mat_for_utility(r,log,P.J+1)
     end
-    return U
+    return U_ret
 end
 
 function flow_utility_all_types(x,P)
@@ -199,6 +199,7 @@ end
 
 function stationary_dist_one_type(x,k,P)
     return stationary_dist_MC_by_iter(trans_mat_loc_loc_one_type_noinf(x,k,P))
+    #return stationary_dist_MC_by_iter(transition_matrix_loc_to_loc_one_type(x,k,P))
 end
 
 function stationary_dist_all_types(x,P)
@@ -212,20 +213,20 @@ function D_L(x,P)
     stationary_dist_types = stationary_dist_all_types(x,P)
     # The total demand is equal to linear combination of these vectors weighted
     # by the number of agents of the given types
-    D_L = stationary_dist_types*P.Pop
+    D_L = stationary_dist_types*Diagonal(P.Pop)
     return D_L
 end
 
 function ED_L(x,P)
     r,a = unpack_vec(x,P.J,P.J,P.S)
-    D = D_L(x,P)[1:P.J]
+    D = D_L(x,P)[1:P.J,:]*ones(P.K)
     Static_ED_vec = D-S_L(r,P) .* P.H
     return Static_ED_vec
 end
 
 function Amenity_supply(x,P)
     r,a = unpack_vec(x,P.J,P.J,P.S)
-    D = D_L(x,P)[1:P.J]
+    D = D_L(x,P)[1:P.J,:]
     budget = (kron(ones(P.J),P.w')-kron(ones(P.K)',r)) # assume people consume 1 unit of housing
     total_budget = P.lambda * D.*budget
     exp_share = total_budget*P.delta_a
