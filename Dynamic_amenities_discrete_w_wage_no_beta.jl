@@ -1,18 +1,20 @@
 #cd("C:/Users/marek/OneDrive/Documents/Julia_files")
 
+cd("/home/mbojko/amenities_model")
+
 include("functions_discrete_choice_dynamic.jl")
 include("utils.jl")
 
 using Random, LinearAlgebra, Optim, ForwardDiff, BenchmarkTools, DataFrames
 using Optim: converged, maximum, maximizer, minimizer, iterations
-using CSV, Plots, LineSearches, Plots.PlotMeasures
+using CSV, Plots, Plots.PlotMeasures
 
 Random.seed!(1234)
 
 # Number of groups, number of amenities, number of locations
 K = 2
 S = 2
-J = 3
+J = 20
 
 # Population
 Pop = 30*J*[1/2, 1/2]
@@ -50,14 +52,14 @@ P = merge(P, moving_cost_param)
 # Amenity parameters
 Amenity_param = (c_a_j = 1*ones(P.J),
                 sigma_s = 2*ones(P.S),
-                w = [8,4],
+                w = [6,3],
                 lambda = 1)
 P = merge(P,Amenity_param)
 
 # Supply parameters
 Supply_param = (alpha = 1.2,
                 c = 0.5,
-                p = 3*ones(P.J),
+                p = ones(P.J),
                 H = vcat(fill.(0.8*sum(P.Pop)/P.J, P.J)...))
 P = merge(P,Supply_param)
 
@@ -86,7 +88,7 @@ close(io)
 f_obj(y) = res_func(exp.(y),P)
 
 # initial guess
-initial_x = log.([3*ones(P.J); 5*ones(P.J*P.S)])
+initial_x = log.([5*ones(P.J); 5*ones(P.J*P.S)])
 
 # Perform the minimization task - first use Nelder Mead for 5*10^3 iters and then switch to LBFGS
 results_NM = optimize(f_obj, initial_x, iterations = 5*10^4, x_tol = 1e-32, f_tol = 1e-32, g_tol = 1e-16)
@@ -110,9 +112,11 @@ write(io,"ED_vec_max = $ED_vec_max\n")
 write(io,"ED_vec_eq = $ED_vec_eq\n")
 write(io,"EA_vec_max = $EA_vec_max\n")
 write(io,"EA_vec_eq = $EA_vec_eq\n")
+write(io,"true_minimizer = $true_minimizer\n")
 close(io)
 
 
+#=
 #### Analysis of results
 
 r_eq = true_minimizer[1:P.J]
@@ -147,3 +151,4 @@ savefig("optim_output/welfare_"*string(J)*"_"*string(K)*"_"*string(S)*"_NM_dynam
 @show welfare_landlords_by_loc = welfare_landlords(true_minimizer,P)
 bar(welfare_landlords_by_loc, legend = false, xticks = 1:P.J, title = "Landlord welfare by location")
 savefig("optim_output/welfare_landlords_"*string(J)*"_"*string(K)*"_"*string(S)*"_NM_dynamic_w_wage.png")
+=#

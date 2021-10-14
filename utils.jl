@@ -89,7 +89,7 @@ function stationary_dist_MC(M::Matrix)
 
 Computes the stationary distribution of a Markov Chain given its transition matrix
 """
-function stationary_dist_MC(M::Matrix)
+function stationary_dist_MC(M)
     # Compute eigenvalues and eigenvectors
     eigen_vals, eigen_vecs = eigen(M')
 
@@ -106,7 +106,7 @@ function stationary_dist_MC_by_iter(M::Matrix)
 
 Finds the stationary distribution of a Markov Chain by rising the transition matrix to a high power
 """
-function stationary_dist_MC_by_iter(M::Matrix, tol::Float64 = 10^-8, n_iter::Int64 = 10^5)
+function stationary_dist_MC_by_iter(M, tol::Float64 = 10^-8, n_iter::Int64 = 10^5)
     counter = 0
     dist = 1
     while dist > tol && counter <= n_iter
