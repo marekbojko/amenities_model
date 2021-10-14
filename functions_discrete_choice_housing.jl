@@ -5,10 +5,10 @@ end
 
 # indirect utility
 function U(r,a,P)
-    a_U = log.(1 .+ a)*inv(Diagonal(P.sigma_s))*(P.delta_s)'
+    a_U = log.(a)*inv(Diagonal(P.sigma_s))*(P.delta_s)'
     budget = kron(ones(P.J),P.w')-kron(r,ones(P.K)')
-    replace!(x -> x<=0 ? 10^-Inf -1 : x, budget)
-    U = P.delta_j.+ log.(1 .+ budget) .+ a_U
+    replace!(x -> x<=0 ? 10^-Inf : x, budget)
+    U = P.delta_j .+ log.(budget) .+ a_U
     return U
 end
 
@@ -33,8 +33,13 @@ function Static_D_L_prob(r,a,P)
 end
 
 function Static_D_L_prob_w_outside(r,a,P)
-    u =  [U(r,a,P); zeros(1,P.K)];
-    E = exp.(u);
+    budget = kron(ones(P.J),P.w')-kron(r,ones(P.K)')
+    z = [replace(x -> x<=0 ? 0 : 1, budget); ones(1,P.K)]
+    replace!(x -> x <= 0 ? 0.05 : x, budget)
+    #U = P.delta_j.+ log.(1 .+ budget) .+ a_U
+    Util = log.(budget) .+ P.delta_j
+    u =  [Util; zeros(1,P.K)]
+    E = exp.(u) .* z
     norm_denominators = (ones(P.J+1)'*E)'
     replace!(x -> x==0 ? 1 : x, norm_denominators)
     denom = inv(Diagonal(norm_denominators));
@@ -54,14 +59,14 @@ end
 
 function Static_ED_vec(x,P)
     r = x[1:P.J];
-    a = reshape(x[P.dim_l_a:P.dim_u_a],P.J,P.S);
+    a = reshape(x[P.J+1:end],P.J,P.S);
     if P.outside_option
         D = Static_D_L_w_outside(r,a,P)*ones(P.K)
         D = D[1:end-1];
     else
         D = Static_D_L(r,a,P)*ones(P.K);
     end
-    Static_ED_vec = 0.5*(D-S_L(r,P).*H)./(D+S_L(r,P).*H);
+    Static_ED_vec = D - S_L(r,P) .* H
     return Static_ED_vec
 end
 
@@ -84,6 +89,6 @@ end
 function Static_EA(x,P)
     Amenity_supply_vec = reshape(Amenity_supply(x,P),P.J*P.S);
     a_vec = x[P.dim_l_a:P.dim_u_a];
-    Static_EA = 0.5*(Amenity_supply_vec-a_vec);
+    Static_EA = Amenity_supply_vec-a_vec
     return Static_EA
 end

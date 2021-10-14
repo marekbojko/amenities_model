@@ -85,11 +85,15 @@ function mat_vals_by_row(v::Vector,f::Function,n_col::Int64)
 end
 
 """
-function stationary_dist_MC(M::Matrix)
+function stationary_dist_MC(M::AbstractMatrix{Float64})
 
 Computes the stationary distribution of a Markov Chain given its transition matrix
 """
+<<<<<<< HEAD
 function stationary_dist_MC(M)
+=======
+function stationary_dist_MC(M::AbstractMatrix{Float64})
+>>>>>>> 165923626c5fc839d6fe13eb9ef5ef55720d2afe
     # Compute eigenvalues and eigenvectors
     eigen_vals, eigen_vecs = eigen(M')
 
@@ -102,7 +106,7 @@ function stationary_dist_MC(M)
 end
 
 """
-function stationary_dist_MC_by_iter(M::Matrix)
+function stationary_dist_MC_by_iter(M::AbstractMatrix{Float64})
 
 Finds the stationary distribution of a Markov Chain by rising the transition matrix to a high power
 """

@@ -8,7 +8,7 @@ include("utils.jl")
 
 using Random, LinearAlgebra, Optim, ForwardDiff, BenchmarkTools, DataFrames
 using Optim: converged, maximum, maximizer, minimizer, iterations
-using CSV, Plots, Plots.PlotMeasures
+using CSV, Plots, LineSearches, Plots.PlotMeasures
 
 Random.seed!(1234)
 
@@ -44,8 +44,8 @@ dist_mat = ones(P.J+1,P.J+1) - Diagonal(ones(P.J+1))
 iota_vecs = [i*ones(Int64, P.J+1)' for i in 1:(P.J+1)]
 iota = vcat(iota_vecs...)
 iota = [iota; [i for i in 1:(P.J+1)]']
-moving_cost_param = (m_0 = 0.5,
-                     m_1 = 0.5,
+moving_cost_param = (m_0 = 0,
+                     m_1 = 0,
                      dist_mat = dist_mat,
                      iota = iota)
 P = merge(P, moving_cost_param)
