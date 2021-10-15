@@ -7,7 +7,7 @@ include("utils.jl")
 
 using Random, LinearAlgebra, Optim, ForwardDiff, BenchmarkTools, DataFrames
 using Optim: converged, maximum, maximizer, minimizer, iterations
-using CSV, Plots,  Plots.PlotMeasures
+using CSV, Plots, LineSearches, Plots.PlotMeasures
 
 Random.seed!(1234)
 
@@ -64,7 +64,7 @@ Supply_param = (alpha = 1.2,
 P = merge(P,Supply_param)
 
 # Simulation parameters
-value_function_iteration_param = (tol = 10^(-16),
+value_function_iteration_param = (tol = 10^(-10),
                                   max_iter = 10^6)
 P = merge(P,value_function_iteration_param)
 
@@ -78,7 +78,7 @@ x = reshape([r a],P.J*(P.S+1))
 @show res_func(x,P)
 
 # Save parameters
-io = open("params/"*string(J)*"_"*string(K)*"_"*string(S)*"dynamic_w_wage_discrete.txt", "w")
+io = open("params/"*string(J)*"_"*string(K)*"_"*string(S)*"dynamic_w_wage_discrete_shorter_ND.txt", "w")
 write(io, string(P))
 close(io)
 
@@ -88,17 +88,17 @@ close(io)
 f_obj(y) = res_func(exp.(y),P)
 
 # initial guess
-initial_x = log.([2.9*ones(P.J-3); 3.1*ones(3) ; 8*ones(P.J*P.S)])
+initial_x = log.([2*ones(P.J) ; 18*ones(P.J); 5*ones(P.J*(P.S-1))])
 
 # Perform the minimization task - first use Nelder Mead for 5*10^3 iters and then switch to LBFGS
 results_NM = optimize(f_obj, initial_x, iterations = 5*10^4, x_tol = 1e-32, f_tol = 1e-32, g_tol = 1e-16)
 @show results_NM
-x_min_NM = results_NM.minimizer
+@show x_min_NM = results_NM.minimizer
 
-results = optimize(f_obj, x_min_NM, method = LBFGS(); autodiff = :forward, iterations = 5*10^6,
+results = optimize(f_obj, x_min_NM, method = LBFGS(;linesearch = LineSearches.BackTracking()), autodiff = :forward, iterations = 5*10^6,
                         x_tol = 1e-32, f_tol = 1e-32, g_tol = 1e-32)
 @show results
-io = open("optim_output/"*string(J)*"_"*string(K)*"_"*string(S)*"_NM_dynamic_w_wage.txt", "w")
+io = open("optim_output/"*string(J)*"_"*string(K)*"_"*string(S)*"_NM_dynamic_w_wage_shorter_ND.txt", "w")
 write(io, string(results))
 
 @show xmin = results.minimizer
@@ -107,6 +107,18 @@ write(io, string(results))
 @show ED_vec_eq = ED_L(true_minimizer,P)
 @show EA_vec_max = maximum(abs.(EA_S(true_minimizer,P)))
 @show EA_vec_eq = EA_S(true_minimizer,P)
+
+if ED_vec_max > 1e-5 | EA_vec_max > 1e-5
+    results = optimize(f_obj, xmin, iterations = 5*10^5, x_tol = 1e-32, f_tol = 1e-32, g_tol = 1e-16)
+    @show results
+    write(io, string(results))
+    @show xmin = results.minimizer
+    @show true_minimizer = exp.(xmin)
+    @show ED_vec_max = maximum(abs.(ED_L(true_minimizer,P)))
+    @show ED_vec_eq = ED_L(true_minimizer,P)
+    @show EA_vec_max = maximum(abs.(EA_S(true_minimizer,P)))
+    @show EA_vec_eq = EA_S(true_minimizer,P)
+end
 
 write(io,"ED_vec_max = $ED_vec_max\n")
 write(io,"ED_vec_eq = $ED_vec_eq\n")
