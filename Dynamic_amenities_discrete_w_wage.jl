@@ -7,7 +7,7 @@ include("utils.jl")
 
 using Random, LinearAlgebra, Optim, ForwardDiff, BenchmarkTools, DataFrames
 using Optim: converged, maximum, maximizer, minimizer, iterations
-using CSV, Plots, LineSearches, Plots.PlotMeasures
+using CSV, Plots,  Plots.PlotMeasures
 
 Random.seed!(1234)
 
@@ -115,7 +115,7 @@ write(io,"EA_vec_eq = $EA_vec_eq\n")
 write(io,"true_minimizer = $true_minimizer\n")
 close(io)
 
-
+#=
 #### Analysis of results
 
 r_eq = true_minimizer[1:P.J]
@@ -150,3 +150,4 @@ savefig("optim_output/welfare_"*string(J)*"_"*string(K)*"_"*string(S)*"_NM_dynam
 @show welfare_landlords_by_loc = welfare_landlords(true_minimizer,P)
 bar(welfare_landlords_by_loc, legend = false, xticks = 1:P.J, title = "Landlord welfare by location")
 savefig("optim_output/welfare_landlords_"*string(J)*"_"*string(K)*"_"*string(S)*"_NM_dynamic_w_wage.png")
+=#

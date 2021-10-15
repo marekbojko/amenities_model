@@ -1,7 +1,6 @@
 #cd("C:/Users/marek/OneDrive/Documents/Julia_files")
 
 cd("/home/mbojko/amenities_model")
-cd("C:/Users/marek/OneDrive/Documents/Booth/git/amenities_model")
 
 include("functions_discrete_choice_dynamic.jl")
 include("utils.jl")
@@ -44,7 +43,7 @@ dist_mat = ones(P.J+1,P.J+1) - Diagonal(ones(P.J+1))
 iota_vecs = [i*ones(Int64, P.J+1)' for i in 1:(P.J+1)]
 iota = vcat(iota_vecs...)
 iota = [iota; [i for i in 1:(P.J+1)]']
-moving_cost_param = (m_0 = 0.5,
+moving_cost_param = (m_0 = 0,
                      m_1 = 0.5,
                      dist_mat = dist_mat,
                      iota = iota)
@@ -79,7 +78,7 @@ x = reshape([r a],P.J*(P.S+1))
 @show res_func(x,P)
 
 # Save parameters
-io = open("params/"*string(J)*"_"*string(K)*"_"*string(S)*"dynamic_w_wage_discrete.txt", "w")
+io = open("params/"*string(J)*"_"*string(K)*"_"*string(S)*"dynamic_w_wage_no_beta_discrete.txt", "w")
 write(io, string(P))
 close(io)
 
@@ -89,7 +88,7 @@ close(io)
 f_obj(y) = res_func(exp.(y),P)
 
 # initial guess
-initial_x = log.([5*ones(P.J); 5*ones(P.J*P.S)])
+initial_x = log.([4*ones(P.J); 20*ones(P.J*P.S)])
 
 # Perform the minimization task - first use Nelder Mead for 5*10^3 iters and then switch to LBFGS
 results_NM = optimize(f_obj, initial_x, iterations = 5*10^4, x_tol = 1e-32, f_tol = 1e-32, g_tol = 1e-16)
@@ -99,7 +98,7 @@ x_min_NM = results_NM.minimizer
 results = optimize(f_obj, x_min_NM, method = LBFGS(); autodiff = :forward, iterations = 5*10^6,
                         x_tol = 1e-32, f_tol = 1e-32, g_tol = 1e-32)
 @show results
-io = open("optim_output/"*string(J)*"_"*string(K)*"_"*string(S)*"_NM_dynamic_w_wage.txt", "w")
+io = open("optim_output/"*string(J)*"_"*string(K)*"_"*string(S)*"_NM_dynamic_w_wage_no_beta_v2.txt", "w")
 write(io, string(results))
 
 @show xmin = results.minimizer
