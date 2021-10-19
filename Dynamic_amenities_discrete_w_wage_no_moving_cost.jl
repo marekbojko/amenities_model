@@ -1,7 +1,6 @@
 #cd("C:/Users/marek/OneDrive/Documents/Julia_files")
 
 cd("/home/mbojko/amenities_model")
-cd("C:/Users/marek/OneDrive/Documents/Booth/git/amenities_model")
 
 include("functions_discrete_choice_dynamic.jl")
 include("utils.jl")
@@ -116,7 +115,7 @@ write(io,"EA_vec_eq = $EA_vec_eq\n")
 write(io,"true_minimizer = $true_minimizer\n")
 close(io)
 
-
+#=
 #### Analysis of results
 
 r_eq = true_minimizer[1:P.J]
@@ -151,3 +150,4 @@ savefig("optim_output/welfare_"*string(P.J)*"_"*string(P.K)*"_"*string(P.S)*"_NM
 @show welfare_landlords_by_loc = welfare_landlords(true_minimizer,P)
 bar(welfare_landlords_by_loc, legend = false, xticks = 1:P.J, title = "Landlord welfare by location")
 savefig("optim_output/welfare_landlords_"*string(P.J)*"_"*string(P.K)*"_"*string(P.S)*"_NM_dynamic_w_wage_no_MC.png")
+=#

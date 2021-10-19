@@ -8,7 +8,7 @@ include("utils.jl")
 
 using Random, LinearAlgebra, Optim, ForwardDiff, BenchmarkTools, DataFrames
 using Optim: converged, maximum, maximizer, minimizer, iterations
-using CSV, Plots, LineSearches, Plots.PlotMeasures
+using CSV, Plots,  Plots.PlotMeasures
 
 Random.seed!(1234)
 
@@ -44,8 +44,8 @@ dist_mat = ones(P.J+1,P.J+1) - Diagonal(ones(P.J+1))
 iota_vecs = [i*ones(Int64, P.J+1)' for i in 1:(P.J+1)]
 iota = vcat(iota_vecs...)
 iota = [iota; [i for i in 1:(P.J+1)]']
-moving_cost_param = (m_0 = 0,
-                     m_1 = 0,
+moving_cost_param = (m_0 = 0.5,
+                     m_1 = 0.5,
                      dist_mat = dist_mat,
                      iota = iota)
 P = merge(P, moving_cost_param)
@@ -89,7 +89,7 @@ close(io)
 f_obj(y) = res_func(exp.(y),P)
 
 # initial guess
-initial_x = log.([5*ones(P.J); 5*ones(P.J*P.S)])
+initial_x = log.([2.9*ones(P.J-3); 3.1*ones(3) ; 8*ones(P.J*P.S)])
 
 # Perform the minimization task - first use Nelder Mead for 5*10^3 iters and then switch to LBFGS
 results_NM = optimize(f_obj, initial_x, iterations = 5*10^4, x_tol = 1e-32, f_tol = 1e-32, g_tol = 1e-16)
@@ -116,7 +116,7 @@ write(io,"EA_vec_eq = $EA_vec_eq\n")
 write(io,"true_minimizer = $true_minimizer\n")
 close(io)
 
-
+#=
 #### Analysis of results
 
 r_eq = true_minimizer[1:P.J]
@@ -151,3 +151,4 @@ savefig("optim_output/welfare_"*string(J)*"_"*string(K)*"_"*string(S)*"_NM_dynam
 @show welfare_landlords_by_loc = welfare_landlords(true_minimizer,P)
 bar(welfare_landlords_by_loc, legend = false, xticks = 1:P.J, title = "Landlord welfare by location")
 savefig("optim_output/welfare_landlords_"*string(J)*"_"*string(K)*"_"*string(S)*"_NM_dynamic_w_wage.png")
+=#
