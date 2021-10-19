@@ -8,8 +8,8 @@ function U(r,a,P)
     a_U = log.(a)*inv(Diagonal(P.sigma_s))*(P.delta_s)'
     budget = kron(ones(P.J),P.w')-kron(r,ones(P.K)')
     replace!(x -> x<=0 ? 10^-Inf : x, budget)
-    U = P.delta_j .+ log.(budget) .+ a_U
-    return U
+    U_ret =  P.delta_j .+ log.(budget)*Diagonal(P.delta_r) .+ a_U
+    return U_ret
 end
 
 
@@ -37,7 +37,8 @@ function Static_D_L_prob_w_outside(r,a,P)
     z = [replace(x -> x<=0 ? 0 : 1, budget); ones(1,P.K)]
     replace!(x -> x <= 0 ? 0.05 : x, budget)
     #U = P.delta_j.+ log.(1 .+ budget) .+ a_U
-    Util = log.(budget) .+ P.delta_j
+    a_U = log.(a)*inv(Diagonal(P.sigma_s))*(P.delta_s)'
+    Util = P.delta_j .+ log.(budget)*Diagonal(P.delta_r) .+ a_U
     u =  [Util; zeros(1,P.K)]
     E = exp.(u) .* z
     norm_denominators = (ones(P.J+1)'*E)'
@@ -72,7 +73,7 @@ end
 
 function Amenity_supply(x,P)
     r = x[1:P.J];
-    a = reshape(x[P.dim_l_a:P.dim_u_a],P.J,P.S);
+    a = reshape(x[(P.J+1):end],P.J,P.S);
     if P.outside_option
         D = Static_D_L_prob_w_outside(r,a,P)[1:end-1,:]*Diagonal(P.Pop)
     else
@@ -88,7 +89,7 @@ end
 
 function Static_EA(x,P)
     Amenity_supply_vec = reshape(Amenity_supply(x,P),P.J*P.S);
-    a_vec = x[P.dim_l_a:P.dim_u_a];
+    a_vec = x[(P.J+1):end];
     Static_EA = Amenity_supply_vec-a_vec
     return Static_EA
 end
