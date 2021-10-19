@@ -1,6 +1,5 @@
 #cd("C:/Users/marek/OneDrive/Documents/Julia_files")
 
-cd("/home/mbojko/amenities_model")
 
 include("functions_discrete_choice_dynamic.jl")
 include("utils.jl")
@@ -88,7 +87,7 @@ close(io)
 f_obj(y) = res_func(exp.(y),P)
 
 # initial guess
-initial_x = log.([4*ones(P.J); 20*ones(P.J*P.S)])
+
 
 # Perform the minimization task - first use Nelder Mead for 5*10^3 iters and then switch to LBFGS
 results_NM = optimize(f_obj, initial_x, iterations = 5*10^4, x_tol = 1e-32, f_tol = 1e-32, g_tol = 1e-16)
@@ -98,7 +97,7 @@ x_min_NM = results_NM.minimizer
 results = optimize(f_obj, x_min_NM, method = LBFGS(); autodiff = :forward, iterations = 5*10^6,
                         x_tol = 1e-32, f_tol = 1e-32, g_tol = 1e-32)
 @show results
-io = open("optim_output/"*string(J)*"_"*string(K)*"_"*string(S)*"_NM_dynamic_w_wage_no_beta_v2.txt", "w")
+
 write(io, string(results))
 
 @show xmin = results.minimizer
@@ -116,7 +115,7 @@ write(io,"true_minimizer = $true_minimizer\n")
 close(io)
 
 
-#=
+
 #### Analysis of results
 
 r_eq = true_minimizer[1:P.J]
@@ -132,23 +131,22 @@ total_amenities_by_eq = a_eq*ones(P.S)
 
 # Plots with housing demand and amenities available
 sorted_D_L = stationary_dist_types_eq[sortperm(get_ordered_indices(P.delta_j)),:]
-plot(sorted_D_L, label = "left", legend=:topleft,right_margin = 10mm,
-xticks=([i for i in 0:P.J]), labels = ["w=$(P.w[1])" "w=$(P.w[2])"])
-plot!(twinx(),r_eq[sortperm(get_ordered_indices(P.delta_j))],color=:green,xticks=:none,label="r",right_margin = 10mm)
-savefig("optim_output/housing_demand_r_"*string(J)*"_"*string(K)*"_"*string(S)*"_NM_dynamic_w_wage.png")
+plot(P.delta_j,sorted_D_L, label = "left", legend=:topleft,right_margin = 10mm, labels = ["w=$(P.w[1])" "w=$(P.w[2])"])
+plot!(twinx(),P.delta_j,r_eq[sortperm(get_ordered_indices(P.delta_j))],color=:green,xticks=:none,label="r",right_margin = 10mm)
+savefig("optim_output/housing_demand_r_"*string(J)*"_"*string(K)*"_"*string(S)*"_NM_dynamic_w_wage_no_beta.png")
 
 sorted_a_eq = a_eq[sortperm(get_ordered_indices(P.delta_j)),:]
-plot(sorted_a_eq, label = "left", legend=:topleft,right_margin = 10mm,
-xticks=([i for i in 0:P.J]), labels = ["s=1" "s=2"])
-plot!(twinx(),r_eq[sortperm(get_ordered_indices(P.delta_j))],color=:green,xticks=:none,label="r",right_margin = 10mm)
-savefig("optim_output/eq_amenities_r_"*string(J)*"_"*string(K)*"_"*string(S)*"_NM_dynamic_w_wage.png")
+plot(P.delta_j,sorted_a_eq, label = "left", legend=:topleft,right_margin = 10mm, labels = ["s=1" "s=2"])
+plot!(twinx(),P.delta_j,r_eq[sortperm(get_ordered_indices(P.delta_j))],color=:green,xticks=:none,label="r",right_margin = 10mm)
+savefig("optim_output/eq_amenities_r_"*string(J)*"_"*string(K)*"_"*string(S)*"_NM_dynamic_w_wage_no_beta.png")
 
 # Compute and plot welfare
 @show welfare_by_type = welfare_households(true_minimizer,P)
 bar(welfare_by_type, legend = false, xticks = [1,2], title = "Welfare by type")
-savefig("optim_output/welfare_"*string(J)*"_"*string(K)*"_"*string(S)*"_NM_dynamic_w_wage.png")
+savefig("optim_output/welfare_"*string(J)*"_"*string(K)*"_"*string(S)*"_NM_dynamic_w_wage_no_beta.png")
 
 @show welfare_landlords_by_loc = welfare_landlords(true_minimizer,P)
 bar(welfare_landlords_by_loc, legend = false, xticks = 1:P.J, title = "Landlord welfare by location")
-savefig("optim_output/welfare_landlords_"*string(J)*"_"*string(K)*"_"*string(S)*"_NM_dynamic_w_wage.png")
-=#
+savefig("optim_output/welfare_landlords_"*string(J)*"_"*string(K)*"_"*string(S)*"_NM_dynamic_w_wage_no_beta.png")
+
+plot(P.delta_j,sorted_D_L)
