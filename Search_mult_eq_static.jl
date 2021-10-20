@@ -1,4 +1,6 @@
-cd("C:/Users/marek/OneDrive/Documents/Julia_files")
+#cd("C:/Users/marek/OneDrive/Documents/Julia_files")
+
+cd("/home/mbojko/amenities_model")
 
 include("functions_discrete_choice_housing.jl")
 include("utils.jl")
@@ -16,7 +18,7 @@ S = 2
 J = 2
 
 # Population
-Pop = 30*J/K*ones(P.K)
+Pop = 30*J/K*ones(K)
 
 # Closed or open city?
 outside_option = true
@@ -26,9 +28,7 @@ P = (K = K,
      S = S,
      J = J,
      Pop = Pop,
-     outside_option = outside_option,
-     dim_l_a  = dim_l_a,
-     dim_u_a  = dim_u_a);
+     outside_option = outside_option);
 
 # Utility parameters
 delta_s = [0.8 0.2; 0.2 0.8]; # for amentities
@@ -141,10 +141,10 @@ end
 df[!,"ED_vec_max"] = Float64[]
 df[!,"EA_vec_max"] = Float64[]
 df[!,"Algo"] = AbstractString[]
-df[!,"Converged"] = Int64[]
+df[!,"Converged"] = Float64[]
 df[!,"Iterations"] = Float64[]
 
-counter = 0
+cntix = 0
 
 for l in 1:P.J
     for own_r in [0.01,2.99,3.01,5.99]
@@ -153,8 +153,9 @@ for l in 1:P.J
                 for others_a_factor in 1:25
                     for own_a_rat in 1:5
                         for others_a_rat in 1:5
-
-                            counter += 1
+			   
+			    global cntix
+                            cntix = cntix + 1
 
                             # Compute the initial values
                             initial_r = [others_r*ones(l-1); own_r; others_r*ones(P.J-l)]
@@ -173,7 +174,7 @@ for l in 1:P.J
                             @show results
 
                             # Write the optim output into a txt file
-                            io = open("optim_output/"*string(counter)*string(J)*"_"*string(K)*"_"*string(S)*"_LBFGS_search_mult_eq.txt", "w")
+                            io = open("optim_output/"*string(cntix)*string(J)*"_"*string(K)*"_"*string(S)*"_LBFGS_search_mult_eq.txt", "w")
                             write(io, string(results))
 
                             # analyze results
@@ -196,28 +197,30 @@ for l in 1:P.J
 
                             # If not converged, plug back into NM
                             if (ED_vec_max > 1e-5) | (EA_vec_max > 1e-5)
-                                results_NM = optimize(res, xmin, iterations = 5*10^7, x_tol = 1e-32, f_tol = 1e-32, g_tol = 1e-16)
+                                results_NM = optimize(res, xmin, iterations = 7*10^6, x_tol = 1e-32, f_tol = 1e-32, g_tol = 1e-16)
                                 @show results_NM
                                 @show xmin = results_NM.minimizer
                                 @show true_minimizer = exp.(xmin)
                                 @show ED_vec_max = maximum(abs.(Static_ED_vec(true_minimizer,P)))
-                                @show Static_ED_vec(true_minimizer,P)
+                                @show ED_true_minimizer = Static_ED_vec(true_minimizer,P)
                                 @show EA_vec_max = maximum(abs.(Static_EA(true_minimizer,P)))
-                                @show Static_EA(true_minimizer,P)
+                                @show EA_true_minimizer = Static_EA(true_minimizer,P)
                                 write(io,"ED_vec_max = $ED_vec_max\n")
                                 write(io,"EA_vec_max = $EA_vec_max\n")
 
                                 # Prepare to output into the dataframe
                                 r_true_minimizer = true_minimizer[1:P.J]
-                                a_true_minimizer = true_minimizer[P.J:end]
+                                a_true_minimizer = true_minimizer[(P.J+1):end]
 
                                 current_row = [initial_r; r_true_minimizer; ED_true_minimizer;reshape(initial_a,P.J*P.S); a_true_minimizer; EA_true_minimizer;ED_vec_max; EA_vec_max; "NM"; Int(converged(results_NM)); iterations(results_NM)]
                                 #Push to df
                                 push!(df, current_row)
                             end
 
+			    close(io)
+
                             # Periodically save output
-                            if counter%100 == 0
+                            if cntix % 100 == 0
                                 CSV.write("optim_output/"*string(J)*"_"*string(K)*"_"*string(S)*"_search_mult_eq.csv", df)
                             end
                         end

@@ -1,7 +1,6 @@
 #cd("C:/Users/marek/OneDrive/Documents/Julia_files")
 
 cd("/home/mbojko/amenities_model")
-cd("C:/Users/marek/OneDrive/Documents/Booth/git/amenities_model")
 
 include("functions_discrete_choice_dynamic.jl")
 include("utils.jl")
