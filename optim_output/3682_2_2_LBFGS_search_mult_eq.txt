@@ -7,18 +7,18 @@
     Algorithm:     L-BFGS
 
  * Convergence measures
-    |x - x'|               = 1.52e-13 ≰ 1.0e-32
-    |x - x'|/|x'|          = 4.41e-15 ≰ 0.0e+00
+    |x - x'|               = 0.00e+00 ≤ 1.0e-32
+    |x - x'|/|x'|          = 0.00e+00 ≤ 0.0e+00
     |f(x) - f(x')|         = 0.00e+00 ≤ 0.0e+00
     |f(x) - f(x')|/|f(x')| = 0.00e+00 ≤ 1.0e-32
-    |g(x)|                 = 2.44e-14 ≰ 1.0e-32
+    |g(x)|                 = 1.03e-13 ≰ 1.0e-32
 
  * Work counters
     Seconds run:   0  (vs limit Inf)
-    Iterations:    6
-    f(x) calls:    21
-    ∇f(x) calls:   21
+    Iterations:    8
+    f(x) calls:    27
+    ∇f(x) calls:   27
 ED_vec_max = 0.6577944172320809
-EA_vec_max = 2.1919057020190156
-ED_vec_max = 0.6577944172320738
-EA_vec_max = 2.1919057020190165
+EA_vec_max = 2.191905702019017
+ED_vec_max = 0.6577944165477936
+EA_vec_max = 2.1919057022241213

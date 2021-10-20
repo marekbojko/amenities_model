@@ -99,7 +99,7 @@ x_min_NM = results_NM.minimizer
 results = optimize(f_obj, x_min_NM, method = LBFGS(); autodiff = :forward, iterations = 5*10^6,
                         x_tol = 1e-32, f_tol = 1e-32, g_tol = 1e-32)
 @show results
-
+io = open("optim_output/"*string(J)*"_"*string(K)*"_"*string(S)*"_NM_dynamic_w_wage_no_beta_counterfactuals.txt", "w")
 write(io, string(results))
 
 @show xmin = results.minimizer
