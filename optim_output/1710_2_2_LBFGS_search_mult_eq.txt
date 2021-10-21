@@ -1,0 +1,22 @@
+ * Status: failure (objective increased between iterations) (line search failed)
+
+ * Candidate solution
+    Final objective value:     -2.302585e+01
+
+ * Found with
+    Algorithm:     L-BFGS
+
+ * Convergence measures
+    |x - x'|               = 2.00e-15 ≰ 1.0e-32
+    |x - x'|/|x'|          = 6.59e-16 ≰ 0.0e+00
+    |f(x) - f(x')|         = 5.68e-14 ≰ 0.0e+00
+    |f(x) - f(x')|/|f(x')| = 2.47e-15 ≰ 1.0e-32
+    |g(x)|                 = 9.44e+02 ≰ 1.0e-32
+
+ * Work counters
+    Seconds run:   13  (vs limit Inf)
+    Iterations:    6942
+    f(x) calls:    20948
+    ∇f(x) calls:   20948
+ED_vec_max = 3.7623237858497305e-12
+EA_vec_max = 4.819140642098318e-10

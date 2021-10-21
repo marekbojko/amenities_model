@@ -1,0 +1,24 @@
+ * Status: success
+
+ * Candidate solution
+    Final objective value:     1.655776e+00
+
+ * Found with
+    Algorithm:     L-BFGS
+
+ * Convergence measures
+    |x - x'|               = 3.97e+00 ≰ 1.0e-32
+    |x - x'|/|x'|          = 7.51e-02 ≰ 0.0e+00
+    |f(x) - f(x')|         = 0.00e+00 ≤ 0.0e+00
+    |f(x) - f(x')|/|f(x')| = 0.00e+00 ≤ 1.0e-32
+    |g(x)|                 = 1.06e-11 ≰ 1.0e-32
+
+ * Work counters
+    Seconds run:   0  (vs limit Inf)
+    Iterations:    55
+    f(x) calls:    186
+    ∇f(x) calls:   186
+ED_vec_max = 0.6577944172312389
+EA_vec_max = 2.1919057020192674
+ED_vec_max = 0.6577944244790874
+EA_vec_max = 2.1919056998445465
